@@ -5,13 +5,13 @@ matrix View;
 matrix Projection;
 matrix InverseViewProjection;
 
-float3 LightAttenuation;
-float4 LightDirection;
+float3 LightAmbientColour;
+float3 LightDiffuseColour;
 float3 LightPosition;
-float3 LightColour;
+float4 LightDirection;
+float3 LightAttenuation;
 
-DECLARE_TEXTURE(PotatoBuffer, 0);
-DECLARE_TEXTURE(PositionBuffer, 2);
+DECLARE_TEXTURE(PositionBuffer, 0);
 DECLARE_TEXTURE(NormalBuffer, 1);
 
 struct ClearBufferVertexInput { float4 Position : POSITION0; };
@@ -31,8 +31,8 @@ ClearBufferVertexOutput ClearBufferVertexMain(in ClearBufferVertexInput input)
 ClearBufferPixelOutput ClearBufferPixelMain(ClearBufferVertexOutput input)
 {
 	ClearBufferPixelOutput output = (ClearBufferPixelOutput)0;
-	output.Position = float4(1,1,1,1);
-    output.Normal = float4(0.5,0.5,0.5,0.5);
+	output.Position = float4(1.0, 1.0, 1.0, 1.0);
+    output.Normal = float4(0.5, 0.5, 0.5, 0.5);
     return output;
 }
 
@@ -89,42 +89,31 @@ struct LightingPixelOutput
 LightingVertexOutput LightingVertexMain(LightingVertexInput input)
 {
     LightingVertexOutput output;
-    output.Position = float4(input.Position, 1);
-    output.TexCoord = input.TexCoord;// - halfPixel;
+    output.Position = float4(input.Position, 1.0);
+    output.TexCoord = input.TexCoord;
     return output;
 }
-
 LightingPixelOutput LightingPixelMain(LightingVertexOutput input)
 {
     LightingPixelOutput output;
-    //get normal data from the normalMap
-    float4 normalData = SAMPLE_TEXTURE(NormalBuffer, input.TexCoord);
-    //tranform normal back into [-1,1] range
-    float3 normal = normalize(2.0 * normalData.xyz - 1.0);
-	//read depth
-	float positionData = SAMPLE_TEXTURE(PositionBuffer, input.TexCoord).r;
-	//compute screen-space position
-	float4 position;
-	position.x = input.TexCoord.x * 2.0f - 1.0f;
-	position.y = -(input.TexCoord.y * 2.0f - 1.0f);
-	position.z = positionData;
-	position.w = 1.0f;
-	//transform to world space
+
+	float encodedDepth = SAMPLE_TEXTURE(PositionBuffer, input.TexCoord).r;
+	float2 screenPos = float2(
+		input.TexCoord.x * 2.0 - 1.0,
+		-(input.TexCoord.y * 2.0 - 1.0));
+	float4 position = float4(screenPos.xy, encodedDepth, 1.0);
 	position = mul(position, InverseViewProjection);
 	position /= position.w;
 
-	output.Colour = float4(ComputeLightContribution(position.xyz, normal.xyz,
-		LightPosition, LightDirection, LightAttenuation, LightColour), 1);
+    float4 encodedNormal = SAMPLE_TEXTURE(NormalBuffer, input.TexCoord);
+    float3 normal = normalize(2 * encodedNormal.xyz - 1.0);
+
+	output.Colour = float4(ComputeLightContribution(position.xyz, normal.xyz, LightPosition,
+		LightDirection, LightAttenuation, LightDiffuseColour, LightAmbientColour), 1.0);
 		
-	// output.Colour = positionData;
-	// output.Colour = normalData;
-	// output.Colour = normalData;
-	// output.Colour = float4(input.TexCoord.xy, 1, 1);
-	// output.Colour = float4(1,1,1,1);
-	// output.Colour.a = 1.0;
 	return output;
 }
 
-TECHNIQUE(ClearBuffer, ClearBufferVertexMain, ClearBufferPixelMain)
-TECHNIQUE(RenderGeometry, GeometryVertexMain, GeometryPixelMain)
-TECHNIQUE(RenderLighting, LightingVertexMain, LightingPixelMain)
+TECHNIQUE(ClearBufferPass, ClearBufferVertexMain, ClearBufferPixelMain)
+TECHNIQUE(GeometryPass, GeometryVertexMain, GeometryPixelMain)
+TECHNIQUE(LightingPass, LightingVertexMain, LightingPixelMain)

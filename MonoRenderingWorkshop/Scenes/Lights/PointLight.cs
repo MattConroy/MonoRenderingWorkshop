@@ -8,8 +8,9 @@ namespace MonoRenderingWorkshop.Scenes.Lights
         private readonly Vector3 _position;
         private readonly float _size;
 
-        public PointLight(Vector3 position, Color colour, float intensity, float size) : base(colour, intensity)
+        public PointLight(LightColour ambient, LightColour diffuse, Vector3 position, float size) : base(ambient, diffuse)
         {
+            Position = position;
             _position = position;
             _size = size;
         }
@@ -21,11 +22,11 @@ namespace MonoRenderingWorkshop.Scenes.Lights
         public override RenderLight GetRenderData() =>
             new RenderLight
             {
-                Colour = Colour,
-                Intensity = Intensity,
+                AmbientColour = Ambient.ToColour(),
+                DiffuseColour = Diffuse.ToColour(),
                 Direction = Vector3.Zero,
                 DirectionFactor = 0,
-                Position = new Vector3(_position.X, _position.Y, _position.Z),
+                Position = Position,
                 Attenuation = Attenuation.Range(_size)
             };
     }

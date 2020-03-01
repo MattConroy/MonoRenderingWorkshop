@@ -7,7 +7,7 @@ namespace MonoRenderingWorkshop.Scenes.Lights
     {
         private readonly Vector3 _direction;
 
-        public DirectionalLight(Vector3 direction, Color colour, float intensity) : base(colour, intensity)
+        public DirectionalLight(LightColour ambient, LightColour diffuse, Vector3 direction) : base(ambient, diffuse)
         {
             _direction = direction;
             _direction.Normalize();
@@ -20,8 +20,8 @@ namespace MonoRenderingWorkshop.Scenes.Lights
         public override RenderLight GetRenderData() =>
             new RenderLight
             {
-                Colour = Colour,
-                Intensity = Intensity,
+                AmbientColour = Ambient.ToColour(),
+                DiffuseColour = Diffuse.ToColour(),
                 Direction = _direction,
                 DirectionFactor = 1,
                 Position = Vector3.Zero,

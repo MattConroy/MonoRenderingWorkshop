@@ -43,8 +43,8 @@ namespace MonoRenderingWorkshop.Scenes
         public void Draw(Renderer renderer)
         {
             renderer.Draw(_camera,
-                _entities.Select(entity => entity.GetRenderData()), 
-                _lights.Select(light => light.GetRenderData()));
+                _entities.Select(entity => entity.GetRenderData()).ToList(), 
+                _lights.Select(light => light.GetRenderData()).ToList());
         }
     }
 }

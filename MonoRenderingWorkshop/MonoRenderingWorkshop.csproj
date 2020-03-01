@@ -42,13 +42,16 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="MonoGame\CircleHelper.cs" />
     <Compile Include="MonoGame\EffectTechniqueExtensions.cs" />
     <Compile Include="MonoGame\GameTimeExtensions.cs" />
+    <Compile Include="Scenes\Lights\PointLightFactory.cs" />
     <Compile Include="Rendering\Components\FullScreenQuad.cs" />
     <Compile Include="Rendering\Components\Quad.cs" />
     <Compile Include="Rendering\Effects\DeferredRenderingEffect.cs" />
     <Compile Include="Rendering\Effects\Parameters\RenderLight.cs" />
     <Compile Include="Rendering\Renderers\DeferredRenderer.cs" />
+    <Compile Include="Rendering\Components\RenderTexture.cs" />
     <Compile Include="Scenes\Cameras\Camera.cs" />
     <Compile Include="Scenes\Cameras\CameraSettings.cs" />
     <Compile Include="Scenes\Cameras\CameraControls.cs" />
@@ -66,6 +69,7 @@
     <Compile Include="Rendering\Renderers\Renderer.cs" />
     <Compile Include="Rendering\Effects\Parameters\RenderEntity.cs" />
     <Compile Include="Scenes\Lights\Light.cs" />
+    <Compile Include="Scenes\Lights\LightColour.cs" />
     <Compile Include="Scenes\Lights\PointLight.cs" />
     <Compile Include="Scenes\Scene.cs" />
     <Compile Include="ShaderManager.cs" />

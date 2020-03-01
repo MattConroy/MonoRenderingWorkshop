@@ -4,11 +4,11 @@ matrix World;
 matrix View;
 matrix Projection;
 
-static const int MAX_LIGHT_COUNT = 4;
-float3 LightAttenuation[MAX_LIGHT_COUNT];
-float4 LightDirection[MAX_LIGHT_COUNT];
-float3 LightPosition[MAX_LIGHT_COUNT];
-float3 LightColour[MAX_LIGHT_COUNT];
+float3 LightAmbientColour;
+float3 LightDiffuseColour;
+float3 LightPosition;
+float4 LightDirection;
+float3 LightAttenuation;
 
 struct VertexInput
 {
@@ -36,18 +36,19 @@ VertexOutput VertexMain(in VertexInput input)
 	output.WorldPos = worldPosition.xyz;
 	return output;
 }
-PixelOutput PixelMain(VertexOutput input) 
+PixelOutput AmbientPixelMain(VertexOutput input) 
 {
 	PixelOutput output;
-	float3 lightColour = float3(0,0,0);
-	[unroll(MAX_LIGHT_COUNT)]
-	for(int i = 0 ; i < MAX_LIGHT_COUNT ; i++)
-	{
-		lightColour += ComputeLightContribution(input.WorldPos, normalize(input.Normal.xyz),
-			LightPosition[i], LightDirection[i], LightAttenuation[i], LightColour[i]);
-	}
-	output.Colour = float4(lightColour.rgb, 1);
+	output.Colour = float4(0.0, 0.0, 0.0, 1.0);
+	return output;
+}
+PixelOutput DiffusePixelMain(VertexOutput input) 
+{
+	PixelOutput output;
+	output.Colour = float4(ComputeLightContribution(input.WorldPos, normalize(input.Normal.xyz),
+		LightPosition, LightDirection, LightAttenuation, LightDiffuseColour, LightAmbientColour), 1.0);
 	return output;
 }
 
-TECHNIQUE(Forward, VertexMain, PixelMain)
+TECHNIQUE(DepthPrePass, VertexMain, AmbientPixelMain)
+TECHNIQUE(LightingPass, VertexMain, DiffusePixelMain)

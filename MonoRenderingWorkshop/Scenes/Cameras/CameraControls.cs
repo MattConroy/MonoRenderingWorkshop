@@ -40,6 +40,6 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
                     [Keys.E] = Vector3.Up
                 },
                 new[] { Keys.LeftShift, Keys.RightShift },
-                new Vector2(0.8f, 0.6f), 8f, 4f);
+                new Vector2(8f, 6f) * 0.001f, 4f, 4f);
     }
 }

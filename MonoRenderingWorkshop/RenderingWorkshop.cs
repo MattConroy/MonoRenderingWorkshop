@@ -2,12 +2,13 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoRenderingWorkshop.Input;
+using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering;
 using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using MonoRenderingWorkshop.Scenes.Lights;
-using DirectionalLight = MonoRenderingWorkshop.Scenes.Lights.DirectionalLight;
+using System.Collections.Generic;
 
 namespace MonoRenderingWorkshop
 {
@@ -28,6 +29,9 @@ namespace MonoRenderingWorkshop
 
         private bool _wasActive = true;
 
+        private readonly PointLightFactory _lightFactory;
+        private readonly IList<Light> _lights;
+
         public RenderingWorkshop()
         {
             _graphics = new GraphicsDeviceManager(this)
@@ -35,6 +39,9 @@ namespace MonoRenderingWorkshop
                 GraphicsProfile = GraphicsProfile.HiDef
             };
             Content.RootDirectory = "Content";
+
+            _lightFactory = new PointLightFactory();
+            _lights = new List<Light>();
         }
 
         protected override void Initialize()
@@ -45,7 +52,6 @@ namespace MonoRenderingWorkshop
             _mouse = new MouseController(Mouse.GetState(), _graphics.GraphicsDevice);
 
             _renderer = CreateForwardRenderer();
-            //_renderer = CreateDeferredRenderer();
 
             _shaderManager = new ShaderManager(Content, _keyboard);
             _shaderManager.ShadersReloaded += OnShadersReloaded;
@@ -59,10 +65,15 @@ namespace MonoRenderingWorkshop
                 Vector3.Forward);
 
             _scene = new Scene(_camera);
-            _scene.Add(new PointLight(new Vector3(0, 5, 8), Color.White, 0.5f, 10f));
-            _scene.Add(new PointLight(new Vector3(0, 8, 0), Color.White, 0.5f, 10f));
-            _scene.Add(new PointLight(new Vector3(0, 5, -8), Color.White, 0.5f, 10f));
-            //_scene.Add(new DirectionalLight(new Vector3(-1, -1, -1), Color.White, 0.5f));
+
+            var ambientLight = new LightColour(Color.Yellow, 0.005f);
+            for (var i = 0; i < 14; ++i)
+            {
+                var light = _lightFactory.CreatePointLight(ambientLight, 0.3f, 10);
+                light.Position = new Vector3(0, 4, 0);
+                _lights.Add(light);
+                _scene.Add(light);
+            }
 
             base.Initialize();
         }
@@ -110,6 +121,13 @@ namespace MonoRenderingWorkshop
             if (_keyboard.WasPressed(Keys.Space))
                 OnSwitchRenderer(time);
 
+            for (var i = 0; i < _lights.Count; ++i)
+            {
+                var angle = CircleHelper.GetAngleFromNumberOfPoints(i, _lights.Count) - (float)time.TotalGameTime.TotalSeconds;
+                var (x, z) = CircleHelper.GetPointOnCircle(Vector2.Zero, 7, angle);
+                _lights[i].Position = new Vector3(x, _lights[i].Position.Y, z);
+            }
+
             _shaderManager.Update(time);
             _renderer.Update(time);
             _scene.Update(time);
@@ -117,8 +135,8 @@ namespace MonoRenderingWorkshop
 
             _ui.Debug($"Time: {time.TotalGameTime.TotalSeconds:N2}");
             _ui.Debug($"Renderer: {_renderer.GetType().Name}");
-            _ui.Debug(!_renderer.MainEffect.AllLightsActive
-                ? $"Active Light is: {_renderer.MainEffect.ActiveLightIndex}"
+            _ui.Debug(!_renderer.AllLightsActive
+                ? $"Active Light is: {_renderer.ActiveLightIndex}"
                 : "All Lights Active");
 
             _mouse.Reset();
@@ -141,6 +159,7 @@ namespace MonoRenderingWorkshop
 
         private void OnSwitchRenderer(GameTime time)
         {
+            _renderer?.Dispose();
             _renderer = _renderer is ForwardRenderer
                 ? CreateDeferredRenderer()
                 : CreateForwardRenderer();

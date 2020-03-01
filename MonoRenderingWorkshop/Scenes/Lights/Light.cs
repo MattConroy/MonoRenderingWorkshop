@@ -5,13 +5,14 @@ namespace MonoRenderingWorkshop.Scenes.Lights
 {
     internal abstract class Light
     {
-        protected float Intensity { get; }
-        protected Color Colour { get; }
+        public Vector3 Position { get; set; }
+        protected LightColour Ambient { get; }
+        protected LightColour Diffuse { get; }
 
-        protected Light(Color colour, float intensity)
+        protected Light(LightColour ambient, LightColour diffuse)
         {
-            Intensity = intensity;
-            Colour = colour;
+            Ambient = ambient;
+            Diffuse = diffuse;
         }
 
         public abstract void Update(GameTime time);

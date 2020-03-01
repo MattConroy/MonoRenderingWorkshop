@@ -3,9 +3,8 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MonoRenderingWorkshop.Rendering.Components
 {
-    internal class Quad 
+    internal class Quad
     {
-        private readonly VertexDeclaration _vertexDeclaration;
         private readonly VertexPositionTexture[] _vertices;
         private readonly short[] _indices;
         private readonly int _primitiveCount;
@@ -16,7 +15,6 @@ namespace MonoRenderingWorkshop.Rendering.Components
         {
             _graphicsDevice = graphicsDevice;
 
-            _vertexDeclaration = VertexPositionTexture.VertexDeclaration;
             _vertices = new[]
             {
                 new VertexPositionTexture(
@@ -51,7 +49,7 @@ namespace MonoRenderingWorkshop.Rendering.Components
                     PrimitiveType.TriangleList,
                     _vertices, 0, _vertices.Length,
                     _indices, 0, _primitiveCount,
-                    _vertexDeclaration);
+                    VertexPositionTexture.VertexDeclaration);
             }
         }
 

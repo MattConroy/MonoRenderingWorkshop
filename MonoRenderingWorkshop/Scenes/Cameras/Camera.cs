@@ -10,9 +10,6 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
     {
         public Matrix Projection { get; private set; }
         public Matrix View { get; private set; }
-        public Vector3 Position => _position;
-
-
 
         private readonly GraphicsDevice _graphicsDevice;
         private readonly KeyboardController _keyboard;
@@ -45,8 +42,8 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
             var deltaTime = time.GetDeltaTime();
             var right = Vector3.Cross(_forward, Vector3.Up);
             _forward = Vector3.TransformNormal(_forward,
-                Matrix.CreateFromAxisAngle(right, _mouse.DeltaPosition.Y * deltaTime * _controls.MouseSensitivity.Y) *
-                Matrix.CreateFromAxisAngle(Vector3.Up, _mouse.DeltaPosition.X * deltaTime * _controls.MouseSensitivity.X));
+                Matrix.CreateFromAxisAngle(right, _mouse.DeltaPosition.Y * _controls.MouseSensitivity.Y) *
+                Matrix.CreateFromAxisAngle(Vector3.Up, _mouse.DeltaPosition.X * _controls.MouseSensitivity.X));
             _forward.Normalize();
 
             var rotation = Matrix.Invert(Matrix.CreateLookAt(Vector3.Zero, _forward, Vector3.Up));

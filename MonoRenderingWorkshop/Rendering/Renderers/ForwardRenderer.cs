@@ -1,12 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoRenderingWorkshop.Input;
+using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering.Effects;
 using MonoRenderingWorkshop.Rendering.Effects.Parameters;
-using MonoRenderingWorkshop.Scenes.Cameras;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace MonoRenderingWorkshop.Rendering.Renderers
 {
@@ -15,24 +13,27 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
         public override string MainEffectName => "forwardRendering";
 
         private ForwardRenderingEffect _forwardRenderingEffect;
+        private EffectTechnique _depthPrePass;
+        private EffectTechnique _lightingPass;
 
         public ForwardRenderer(GraphicsDeviceManager graphics, int width, int height, KeyboardController keyboard) : base(graphics, width, height, keyboard)
         {
             DeviceManager.PreferMultiSampling = true;
         }
 
-        public override void Draw(Camera camera, IEnumerable<RenderEntity> entities, IEnumerable<RenderLight> lights)
+        protected override RenderEffect CreateRenderEffect(Effect mainEffect)
         {
-            if (_forwardRenderingEffect == null)
-                throw new InvalidOperationException($"{nameof(_forwardRenderingEffect)} cannot be null.");
+            _forwardRenderingEffect = new ForwardRenderingEffect(mainEffect);
 
-            DeviceManager.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            DeviceManager.GraphicsDevice.BlendState = BlendState.Opaque;
-            DeviceManager.GraphicsDevice.Clear(Color.CornflowerBlue);
+            _depthPrePass = _forwardRenderingEffect.Techniques.GetByName("DepthPrePass");
+            _lightingPass = _forwardRenderingEffect.Techniques.GetByName("LightingPass");
 
-            _forwardRenderingEffect.View = camera.View;
-            _forwardRenderingEffect.Projection = camera.Projection;
-            _forwardRenderingEffect.Lights = lights.ToArray();
+            return _forwardRenderingEffect;
+        }
+
+        protected override void Draw(IList<RenderEntity> entities, IList<RenderLight> lights)
+        {
+            _forwardRenderingEffect.CurrentTechnique = _depthPrePass;
 
             foreach (var entity in entities)
             {
@@ -48,14 +49,33 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
                     mesh.Draw();
                 }
             }
+
+            DeviceManager.GraphicsDevice.DepthStencilState = DepthStencilState.DepthRead;
+            DeviceManager.GraphicsDevice.BlendState = BlendState.Additive;
+            _forwardRenderingEffect.CurrentTechnique = _lightingPass;
+            foreach (var entity in entities)
+            {
+                foreach (var mesh in entity.Model.Meshes)
+                {
+                    _forwardRenderingEffect.World = entity.BoneTransforms[mesh.ParentBone.Index] * entity.World;
+
+                    foreach (var part in mesh.MeshParts)
+                    {
+                        part.Effect = _forwardRenderingEffect;
+                    }
+
+                    for (var i = 0; i < lights.Count; ++i)
+                    {
+                        if (AllLightsActive || ActiveLightIndex == i)
+                        {
+                            _forwardRenderingEffect.CurrentLight = lights[i];
+                            mesh.Draw();
+                        }
+                    }
+                }
+            }
         }
 
         protected override void DrawDebugInformation(SpriteBatch spriteBatch) { }
-
-        protected override RenderEffect CreateRenderEffect(Effect mainEffect)
-        {
-            _forwardRenderingEffect = new ForwardRenderingEffect(mainEffect);
-            return _forwardRenderingEffect;
-        }
     }
 }

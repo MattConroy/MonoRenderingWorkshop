@@ -5,8 +5,6 @@ using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering.Components;
 using MonoRenderingWorkshop.Rendering.Effects;
 using MonoRenderingWorkshop.Rendering.Effects.Parameters;
-using MonoRenderingWorkshop.Scenes.Cameras;
-using System;
 using System.Collections.Generic;
 
 namespace MonoRenderingWorkshop.Rendering.Renderers
@@ -17,55 +15,77 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 
         private readonly FullScreenQuad _fullScreenQuad;
 
-        private readonly RenderTarget2D _positionBuffer;
-        private readonly RenderTarget2D _normalBuffer;
-
-        private readonly Texture2D _positionTexture;
-        private readonly Texture2D _normalTexture;
-
-        private readonly Color[] _positionData;
-        private readonly Color[] _normalData;
+        private readonly RenderTexture _positionBuffer;
+        private readonly RenderTexture _normalBuffer;
 
         private DeferredRenderingEffect _deferredRenderingEffect;
 
-        private EffectTechnique _clearBufferTechnique;
-        private EffectTechnique _renderGeometryTechnique;
-        private EffectTechnique _renderLightingTechnique;
+        private EffectTechnique _clearBufferPass;
+        private EffectTechnique _geometryPass;
+        private EffectTechnique _lightingPass;
 
         public DeferredRenderer(GraphicsDeviceManager graphics, int width, int height, KeyboardController keyboard) : base(graphics, width, height, keyboard)
         {
-            _positionBuffer = new RenderTarget2D(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8);
-            _normalBuffer = new RenderTarget2D(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
-
-            _positionTexture = new Texture2D(DeviceManager.GraphicsDevice, width, height, false, _positionBuffer.Format);
-            _normalTexture = new Texture2D(DeviceManager.GraphicsDevice, width, height, false, _normalBuffer.Format);
-
-            _positionData = new Color[width * height];
-            _normalData = new Color[width * height];
+            _positionBuffer = new RenderTexture(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8);
+            _normalBuffer = new RenderTexture(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
 
             _fullScreenQuad = new FullScreenQuad(DeviceManager.GraphicsDevice);
 
             DeviceManager.PreferMultiSampling = false;
         }
 
-        public override void Draw(Camera camera, IEnumerable<RenderEntity> entities, IEnumerable<RenderLight> lights)
+        public override void Dispose()
         {
-            if (_deferredRenderingEffect == null)
-                throw new InvalidOperationException($"{nameof(_deferredRenderingEffect)} cannot be null.");
+            base.Dispose();
 
-            DeviceManager.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            DeviceManager.GraphicsDevice.BlendState = BlendState.Opaque;
-            DeviceManager.GraphicsDevice.Clear(Color.CornflowerBlue);
+            _positionBuffer?.Dispose();
+            _normalBuffer?.Dispose();
+        }
 
+        protected override RenderEffect CreateRenderEffect(Effect mainEffect)
+        {
+            _deferredRenderingEffect = new DeferredRenderingEffect(mainEffect);
+
+            _clearBufferPass = _deferredRenderingEffect.Techniques.GetByName("ClearBufferPass");
+            _geometryPass = _deferredRenderingEffect.Techniques.GetByName("GeometryPass");
+            _lightingPass = _deferredRenderingEffect.Techniques.GetByName("LightingPass");
+
+            _deferredRenderingEffect.PositionBuffer = _positionBuffer;
+            _deferredRenderingEffect.NormalBuffer = _normalBuffer;
+
+            return _deferredRenderingEffect;
+        }
+
+        protected override void Draw(IList<RenderEntity> entities, IList<RenderLight> lights)
+        {
             DeviceManager.GraphicsDevice.SetRenderTargets(_positionBuffer, _normalBuffer);
 
-            _deferredRenderingEffect.View = camera.View;
-            _deferredRenderingEffect.Projection = camera.Projection;
+            ClearGeometryBuffers();
 
-            _fullScreenQuad.Draw(_clearBufferTechnique);
+            DrawGeometryPass(entities);
 
-            //_deferredRenderingEffect.Lights = lights.ToArray();
-            _deferredRenderingEffect.CurrentTechnique = _renderGeometryTechnique;
+            DeviceManager.GraphicsDevice.SetRenderTarget(null);
+            DeviceManager.GraphicsDevice.BlendState = BlendState.Additive;
+
+            DrawLightingPass(lights);
+        }
+
+        protected override void DrawDebugInformation(SpriteBatch spriteBatch)
+        {
+            int halfWidth = DeviceManager.GraphicsDevice.Viewport.Width / 2;
+            int halfHeight = DeviceManager.GraphicsDevice.Viewport.Height / 2;
+            spriteBatch.Draw(_positionBuffer.ToTexture2D(), new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
+            spriteBatch.Draw(_normalBuffer.ToTexture2D(), new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
+        }
+
+        private void ClearGeometryBuffers()
+        {
+            _fullScreenQuad.Draw(_clearBufferPass);
+        }
+
+        private void DrawGeometryPass(IEnumerable<RenderEntity> entities)
+        {
+            _deferredRenderingEffect.CurrentTechnique = _geometryPass;
 
             foreach (var entity in entities)
             {
@@ -81,48 +101,18 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
                     mesh.Draw();
                 }
             }
+        }
 
-            _deferredRenderingEffect.PositionBuffer = _positionBuffer;
-            _deferredRenderingEffect.NormalBuffer = _normalBuffer;
-
-            DeviceManager.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
-            DeviceManager.GraphicsDevice.SamplerStates[1] = SamplerState.PointClamp;
-            DeviceManager.GraphicsDevice.Textures[0] = _positionTexture;
-            DeviceManager.GraphicsDevice.Textures[1] = _normalTexture;
-
-            DeviceManager.GraphicsDevice.Textures[0] = _positionBuffer;
-            DeviceManager.GraphicsDevice.Textures[1] = _normalBuffer;
-
-            DeviceManager.GraphicsDevice.SetRenderTarget(null);
-
-            foreach (var light in lights)
+        private void DrawLightingPass(IList<RenderLight> lights)
+        {
+            for (var i = 0; i < lights.Count; ++i)
             {
-                _deferredRenderingEffect.CurrentLight = light;
-                _fullScreenQuad.Draw(_renderLightingTechnique);
+                if (AllLightsActive || ActiveLightIndex == i)
+                {
+                    _deferredRenderingEffect.CurrentLight = lights[i];
+                    _fullScreenQuad.Draw(_lightingPass);
+                }
             }
-        }
-
-        protected override void DrawDebugInformation(SpriteBatch spriteBatch)
-        {
-            _positionBuffer.GetData(_positionData);
-            _positionTexture.SetData(_positionData);
-
-            _normalBuffer.GetData(_normalData);
-            _normalTexture.SetData(_normalData);
-
-            int halfWidth = DeviceManager.GraphicsDevice.Viewport.Width / 2;
-            int halfHeight = DeviceManager.GraphicsDevice.Viewport.Height / 2;
-            spriteBatch.Draw(_positionTexture, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
-            spriteBatch.Draw(_normalTexture, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
-        }
-
-        protected override RenderEffect CreateRenderEffect(Effect mainEffect)
-        {
-            _deferredRenderingEffect = new DeferredRenderingEffect(mainEffect);
-            _clearBufferTechnique = _deferredRenderingEffect.Techniques.GetByName("ClearBuffer");
-            _renderGeometryTechnique = _deferredRenderingEffect.Techniques.GetByName("RenderGeometry");
-            _renderLightingTechnique = _deferredRenderingEffect.Techniques.GetByName("RenderLighting");
-            return _deferredRenderingEffect;
         }
     }
 }
