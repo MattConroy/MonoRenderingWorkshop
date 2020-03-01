@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Input;
+using MonoRenderingWorkshop.Input;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -12,25 +14,36 @@ namespace MonoRenderingWorkshop
         private const string ContentBuilderPath = @"C:\Program Files (x86)\MSBuild\MonoGame\v3.0\Tools\MGCB.exe";
         private const string RecompileShadersCommand = "recompileShaders.mgcb";
 
+        public event Action<GameTime> ShadersReloaded;
+
+        private readonly KeyboardController _keyboard;
+
         private readonly string _artifactDirectory;
         private readonly string _sourceDirectory;
-        private readonly Action<GameTime> _onShadersReloaded;
 
-        public ShaderManager(ContentManager mainContentManager, Action<GameTime> onShadersReloaded) :
+        public ShaderManager(ContentManager mainContentManager, KeyboardController keyboard) :
             base(mainContentManager?.ServiceProvider,
                 mainContentManager?.RootDirectory)
         {
             _artifactDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Content");
             _sourceDirectory = Path.GetFullPath(Path.Combine(_artifactDirectory, @"..\..\..\..\..\Content"));
-            _onShadersReloaded = onShadersReloaded;
+            _keyboard = keyboard;
         }
 
-        public void Reload(GameTime time)
+        public void Load() => Reload(new GameTime());
+
+        public void Update(GameTime time)
+        {
+            if (_keyboard.WasPressed(Keys.F5))
+                Reload(time);
+        }
+
+        private void Reload(GameTime time)
         {
             if (RecompileShaders())
             {
                 Unload();
-                _onShadersReloaded(time);
+                OnShadersReloaded(time);
             }
         }
 
@@ -85,5 +98,10 @@ namespace MonoRenderingWorkshop
                     RedirectStandardOutput = true
                 }
             };
+
+        private void OnShadersReloaded(GameTime time)
+        {
+            ShadersReloaded?.Invoke(time);
+        }
     }
 }

@@ -6,8 +6,8 @@ namespace MonoRenderingWorkshop.Rendering.Effects
 {
     internal sealed class DeferredRenderingEffect : RenderEffect
     {
-        public Texture PositionMap { get; set; }
-        public Texture NormalMap { get; set; }
+        public Texture PositionBuffer { get; set; }
+        public Texture NormalBuffer { get; set; }
         public RenderLight CurrentLight
         {
             set => AssignLightValue(value);
@@ -37,10 +37,9 @@ namespace MonoRenderingWorkshop.Rendering.Effects
             Parameters[$"Light{nameof(RenderLight.Position)}"].SetValue(_position);
             Parameters[$"Light{nameof(RenderLight.Colour)}"].SetValue(_colour);
 
-            Parameters[nameof(PositionMap)].SetValue(PositionMap);
-            Parameters[nameof(NormalMap)].SetValue(NormalMap);
+            Parameters[nameof(PositionBuffer)]?.SetValue(PositionBuffer);
+            Parameters[nameof(NormalBuffer)]?.SetValue(NormalBuffer);
         }
-
 
         private void AssignLightValue(RenderLight light)
         {

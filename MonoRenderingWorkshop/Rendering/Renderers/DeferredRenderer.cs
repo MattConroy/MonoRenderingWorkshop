@@ -13,6 +13,8 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 {
     internal sealed class DeferredRenderer : Renderer
     {
+        public override string MainEffectName => "deferredRendering";
+
         private readonly FullScreenQuad _fullScreenQuad;
 
         private readonly RenderTarget2D _positionBuffer;
@@ -80,7 +82,16 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
                 }
             }
 
+            _deferredRenderingEffect.PositionBuffer = _positionBuffer;
+            _deferredRenderingEffect.NormalBuffer = _normalBuffer;
 
+            DeviceManager.GraphicsDevice.SamplerStates[0] = SamplerState.PointClamp;
+            DeviceManager.GraphicsDevice.SamplerStates[1] = SamplerState.PointClamp;
+            DeviceManager.GraphicsDevice.Textures[0] = _positionTexture;
+            DeviceManager.GraphicsDevice.Textures[1] = _normalTexture;
+
+            DeviceManager.GraphicsDevice.Textures[0] = _positionBuffer;
+            DeviceManager.GraphicsDevice.Textures[1] = _normalBuffer;
 
             DeviceManager.GraphicsDevice.SetRenderTarget(null);
 
@@ -89,20 +100,18 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
                 _deferredRenderingEffect.CurrentLight = light;
                 _fullScreenQuad.Draw(_renderLightingTechnique);
             }
-
         }
 
-        public override void DrawDebug(SpriteBatch spriteBatch)
+        protected override void DrawDebugInformation(SpriteBatch spriteBatch)
         {
-            int halfWidth = DeviceManager.GraphicsDevice.Viewport.Width / 2;
-            int halfHeight = DeviceManager.GraphicsDevice.Viewport.Height / 2;
-
             _positionBuffer.GetData(_positionData);
             _positionTexture.SetData(_positionData);
 
             _normalBuffer.GetData(_normalData);
             _normalTexture.SetData(_normalData);
 
+            int halfWidth = DeviceManager.GraphicsDevice.Viewport.Width / 2;
+            int halfHeight = DeviceManager.GraphicsDevice.Viewport.Height / 2;
             spriteBatch.Draw(_positionTexture, new Rectangle(0, halfHeight, halfWidth, halfHeight), Color.White);
             spriteBatch.Draw(_normalTexture, new Rectangle(halfWidth, halfHeight, halfWidth, halfHeight), Color.White);
         }

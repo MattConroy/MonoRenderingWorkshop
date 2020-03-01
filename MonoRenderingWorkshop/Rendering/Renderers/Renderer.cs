@@ -14,6 +14,7 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
         private static readonly Keys[] LightActivationKeys = { Keys.NumPad0, Keys.NumPad1, Keys.NumPad2, Keys.NumPad3, Keys.NumPad4, Keys.NumPad5, Keys.NumPad6, Keys.NumPad7, Keys.NumPad8, Keys.NumPad9 };
         private const int KeyOffset = (int) Keys.NumPad0;
 
+        public abstract string MainEffectName { get; }
         public RenderEffect MainEffect { get; private set; }
 
         protected GraphicsDeviceManager DeviceManager { get; }
@@ -45,7 +46,13 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 
         public abstract void Draw(Camera camera, IEnumerable<RenderEntity> entities, IEnumerable<RenderLight> lights);
 
-        public abstract void DrawDebug(SpriteBatch spriteBatch);
+        public void DrawDebug(SpriteBatch spriteBatch)
+        {
+            if (_keyboard.IsKeyDown(Keys.X))
+                DrawDebugInformation(spriteBatch);
+        }
+
+        protected abstract void DrawDebugInformation(SpriteBatch spriteBatch);
 
         protected abstract RenderEffect CreateRenderEffect(Effect mainEffect);
 

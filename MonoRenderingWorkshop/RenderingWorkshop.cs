@@ -7,7 +7,7 @@ using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using MonoRenderingWorkshop.Scenes.Lights;
-using System;
+using DirectionalLight = MonoRenderingWorkshop.Scenes.Lights.DirectionalLight;
 
 namespace MonoRenderingWorkshop
 {
@@ -30,8 +30,10 @@ namespace MonoRenderingWorkshop
 
         public RenderingWorkshop()
         {
-            _graphics = new GraphicsDeviceManager(this);
-            _graphics.GraphicsProfile = GraphicsProfile.HiDef;
+            _graphics = new GraphicsDeviceManager(this)
+            {
+                GraphicsProfile = GraphicsProfile.HiDef
+            };
             Content.RootDirectory = "Content";
         }
 
@@ -42,9 +44,11 @@ namespace MonoRenderingWorkshop
             _keyboard = new KeyboardController(Keyboard.GetState());
             _mouse = new MouseController(Mouse.GetState(), _graphics.GraphicsDevice);
 
-            _renderer = new ForwardRenderer(_graphics, 1280, 720, _keyboard);
-            //_renderer = new DeferredRenderer(_graphics, 1280, 720, _keyboard);
-            _shaderManager = new ShaderManager(Content, OnShadersReloaded);
+            _renderer = CreateForwardRenderer();
+            //_renderer = CreateDeferredRenderer();
+
+            _shaderManager = new ShaderManager(Content, _keyboard);
+            _shaderManager.ShadersReloaded += OnShadersReloaded;
 
             _camera = new Camera(
                 _graphics.GraphicsDevice,
@@ -55,10 +59,10 @@ namespace MonoRenderingWorkshop
                 Vector3.Forward);
 
             _scene = new Scene(_camera);
-            //_scene.Add(new DirectionalLight(new Vector3(-1, -1, -1), Color.White, 0.5f));
             _scene.Add(new PointLight(new Vector3(0, 5, 8), Color.White, 0.5f, 10f));
             _scene.Add(new PointLight(new Vector3(0, 8, 0), Color.White, 0.5f, 10f));
             _scene.Add(new PointLight(new Vector3(0, 5, -8), Color.White, 0.5f, 10f));
+            //_scene.Add(new DirectionalLight(new Vector3(-1, -1, -1), Color.White, 0.5f));
 
             base.Initialize();
         }
@@ -69,17 +73,14 @@ namespace MonoRenderingWorkshop
 
             _scene.Add(new Entity(Content.Load<Model>("models/sponza/sponza"),
                 Vector3.Zero, Quaternion.Identity, Vector3.One));
-            //_scene.Add(new Entity(Content.Load<Model>("models/cube"),
-            //    new Vector3(0, -1f, 0), Quaternion.Identity, new Vector3(50, 0.5f, 50)));
 
-            _shaderManager.Reload(new GameTime());
+            _shaderManager.Load();
         }
 
         private void OnShadersReloaded(GameTime time)
         {
-            _renderer.SetMainEffect(_shaderManager.Load<Effect>("shaders/forwardRendering"));
-            //_renderer.SetMainEffect(_shaderManager.Load<Effect>("shaders/deferredRendering"));
-            _ui.Debug("Shaders loaded successfully!", time.TotalGameTime + TimeSpan.FromSeconds(3));
+            _renderer.SetMainEffect(_shaderManager.Load<Effect>($"shaders/{_renderer.MainEffectName}"));
+            _ui.Debug("Shaders loaded successfully!", time);
         }
 
         protected override void UnloadContent()
@@ -103,17 +104,19 @@ namespace MonoRenderingWorkshop
             _keyboard.Update(time, keyboardState);
             _mouse.Update(time, mouseState);
 
-            if (_keyboard.IsKeyDown(Keys.Escape))
+            if (_keyboard.IsKeyDown(Keys.Escape) && !_keyboard.IsKeyDown(Keys.LeftAlt))
                 Exit();
 
-            if (_keyboard.WasPressed(Keys.F5))
-                _shaderManager.Reload(time);
+            if (_keyboard.WasPressed(Keys.Space))
+                OnSwitchRenderer(time);
 
+            _shaderManager.Update(time);
             _renderer.Update(time);
             _scene.Update(time);
             _ui.Update(time);
 
             _ui.Debug($"Time: {time.TotalGameTime.TotalSeconds:N2}");
+            _ui.Debug($"Renderer: {_renderer.GetType().Name}");
             _ui.Debug(!_renderer.MainEffect.AllLightsActive
                 ? $"Active Light is: {_renderer.MainEffect.ActiveLightIndex}"
                 : "All Lights Active");
@@ -135,5 +138,22 @@ namespace MonoRenderingWorkshop
         {
             _mouse.Reset();
         }
+
+        private void OnSwitchRenderer(GameTime time)
+        {
+            _renderer = _renderer is ForwardRenderer
+                ? CreateDeferredRenderer()
+                : CreateForwardRenderer();
+
+            _ui.Debug($"Renderer changed to {_renderer.GetType().Name}", time);
+
+            OnShadersReloaded(time);
+        }
+
+        private Renderer CreateDeferredRenderer() =>
+            new DeferredRenderer(_graphics, 1280, 720, _keyboard);
+
+        private Renderer CreateForwardRenderer() =>
+            new ForwardRenderer(_graphics, 1280, 720, _keyboard);
     }
 }

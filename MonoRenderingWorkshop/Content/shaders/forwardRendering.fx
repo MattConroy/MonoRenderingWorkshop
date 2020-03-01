@@ -1,12 +1,4 @@
-﻿#if OPENGL
-	#define SV_POSITION POSITION
-	#define VS_SHADERMODEL vs_3_0
-	#define PS_SHADERMODEL ps_3_0
-#else
-	#define VS_SHADERMODEL vs_4_0_level_9_1
-	#define PS_SHADERMODEL ps_4_0_level_9_1
-#endif
-#include "common.fx"
+﻿#include "common.fxh"
 
 matrix World;
 matrix View;
@@ -51,19 +43,11 @@ PixelOutput PixelMain(VertexOutput input)
 	[unroll(MAX_LIGHT_COUNT)]
 	for(int i = 0 ; i < MAX_LIGHT_COUNT ; i++)
 	{
-		lightColour += ComputeLightContribution(input.WorldPos, input.Normal.xyz,
+		lightColour += ComputeLightContribution(input.WorldPos, normalize(input.Normal.xyz),
 			LightPosition[i], LightDirection[i], LightAttenuation[i], LightColour[i]);
 	}
 	output.Colour = float4(lightColour.rgb, 1);
 	return output;
 }
 
-
-technique Forward
-{
-	pass Pass0
-	{
-		VertexShader = compile VS_SHADERMODEL VertexMain();
-		PixelShader = compile PS_SHADERMODEL PixelMain();
-	}
-};
+TECHNIQUE(Forward, VertexMain, PixelMain)

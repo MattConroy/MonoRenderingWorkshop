@@ -3,9 +3,10 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering.Messages;
+using MonoRenderingWorkshop.Rendering.Renderers;
 using System;
 using System.Collections.Generic;
-using MonoRenderingWorkshop.Rendering.Renderers;
+using System.Linq;
 
 namespace MonoRenderingWorkshop.Rendering
 {
@@ -33,6 +34,9 @@ namespace MonoRenderingWorkshop.Rendering
         public void Debug(string message, TimeSpan expirationTime) =>
             _messages.Add(new TimedMessage(message, expirationTime));
 
+        public void Debug(string message, GameTime time) =>
+            Debug(message, time.TotalGameTime + TimeSpan.FromSeconds(2));
+
         public void Update(GameTime gameTime)
         {
             for (var i = 0; i < _messages.Count; i++)
@@ -57,7 +61,7 @@ namespace MonoRenderingWorkshop.Rendering
             var screenPosition = Vector2.Zero;
             screenPosition.Y += Spacing;
 
-            foreach (var message in _messages)
+            foreach (var message in _messages.OrderBy(message => message))
             {
                 _spriteBatch.DrawString(_arial, message.ToString(), screenPosition, Color.Fuchsia);
                 screenPosition.Y += Spacing;

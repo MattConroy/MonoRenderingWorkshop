@@ -12,6 +12,8 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 {
     internal sealed class ForwardRenderer : Renderer
     {
+        public override string MainEffectName => "forwardRendering";
+
         private ForwardRenderingEffect _forwardRenderingEffect;
 
         public ForwardRenderer(GraphicsDeviceManager graphics, int width, int height, KeyboardController keyboard) : base(graphics, width, height, keyboard)
@@ -48,7 +50,7 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
             }
         }
 
-        public override void DrawDebug(SpriteBatch spriteBatch) { }
+        protected override void DrawDebugInformation(SpriteBatch spriteBatch) { }
 
         protected override RenderEffect CreateRenderEffect(Effect mainEffect)
         {

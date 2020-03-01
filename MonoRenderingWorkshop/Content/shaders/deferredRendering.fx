@@ -1,12 +1,4 @@
-﻿#if OPENGL
-	#define SV_POSITION POSITION
-	#define VS_SHADERMODEL vs_3_0
-	#define PS_SHADERMODEL ps_3_0
-#else
-	#define VS_SHADERMODEL vs_4_0_level_9_1
-	#define PS_SHADERMODEL ps_4_0_level_9_1
-#endif
-#include "common.fx"
+﻿#include "common.fxh"
 
 matrix World;
 matrix View;
@@ -18,26 +10,9 @@ float4 LightDirection;
 float3 LightPosition;
 float3 LightColour;
 
-texture PositionBuffer;
-texture NormalBuffer;
-sampler PositionSampler = sampler_state
-{
-    Texture = (PositionBuffer);
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-    MagFilter = POINT;
-    MinFilter = POINT;
-    Mipfilter = POINT;
-};
-sampler NormalSampler = sampler_state
-{
-    Texture = (NormalBuffer);
-    AddressU = CLAMP;
-    AddressV = CLAMP;
-    MagFilter = POINT;
-    MinFilter = POINT;
-    Mipfilter = POINT;
-};
+DECLARE_TEXTURE(PotatoBuffer, 0);
+DECLARE_TEXTURE(PositionBuffer, 2);
+DECLARE_TEXTURE(NormalBuffer, 1);
 
 struct ClearBufferVertexInput { float4 Position : POSITION0; };
 struct ClearBufferVertexOutput { float4 Position : SV_POSITION; };
@@ -91,8 +66,8 @@ GeometryVertexOutput GeometryVertexMain(in GeometryVertexInput input)
 GeometryPixelOutput GeometryPixelMain(GeometryVertexOutput input) 
 {
 	GeometryPixelOutput output;
-	output.Position = (input.Depth.x / 50);
-	output.Normal = (1 + normalize(input.Normal)) * 0.5;
+	output.Position = input.Depth.x / input.Depth.y;
+	output.Normal = 0.5 * normalize(input.Normal) + 0.5;
 	return output;
 }
 
@@ -123,11 +98,11 @@ LightingPixelOutput LightingPixelMain(LightingVertexOutput input)
 {
     LightingPixelOutput output;
     //get normal data from the normalMap
-    float4 normalData = tex2D(NormalSampler, input.TexCoord);
+    float4 normalData = SAMPLE_TEXTURE(NormalBuffer, input.TexCoord);
     //tranform normal back into [-1,1] range
-    float3 normal = 2.0f * normalData.xyz - 1.0f;
+    float3 normal = normalize(2.0 * normalData.xyz - 1.0);
 	//read depth
-	float positionData = tex2D(PositionSampler, input.TexCoord).r;
+	float positionData = SAMPLE_TEXTURE(PositionBuffer, input.TexCoord).r;
 	//compute screen-space position
 	float4 position;
 	position.x = input.TexCoord.x * 2.0f - 1.0f;
@@ -141,36 +116,15 @@ LightingPixelOutput LightingPixelMain(LightingVertexOutput input)
 	output.Colour = float4(ComputeLightContribution(position.xyz, normal.xyz,
 		LightPosition, LightDirection, LightAttenuation, LightColour), 1);
 		
-	output.Colour = normalData;
-	output.Colour = float4(input.TexCoord.xy, 1, 1);
+	// output.Colour = positionData;
+	// output.Colour = normalData;
+	// output.Colour = normalData;
+	// output.Colour = float4(input.TexCoord.xy, 1, 1);
 	// output.Colour = float4(1,1,1,1);
-	
+	// output.Colour.a = 1.0;
 	return output;
 }
 
-technique ClearBuffer
-{
-	pass Pass0
-	{
-		VertexShader = compile VS_SHADERMODEL ClearBufferVertexMain();
-		PixelShader = compile PS_SHADERMODEL ClearBufferPixelMain();
-	}
-};
-
-technique RenderGeometry
-{
-	pass Pass0
-	{
-		VertexShader = compile VS_SHADERMODEL GeometryVertexMain();
-		PixelShader = compile PS_SHADERMODEL GeometryPixelMain();
-	}
-};
-
-technique RenderLighting
-{
-	pass Pass0
-	{
-		VertexShader = compile VS_SHADERMODEL LightingVertexMain();
-		PixelShader = compile PS_SHADERMODEL LightingPixelMain();
-	}
-};
+TECHNIQUE(ClearBuffer, ClearBufferVertexMain, ClearBufferPixelMain)
+TECHNIQUE(RenderGeometry, GeometryVertexMain, GeometryPixelMain)
+TECHNIQUE(RenderLighting, LightingVertexMain, LightingPixelMain)
