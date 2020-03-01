@@ -23,7 +23,7 @@ namespace MonoRenderingWorkshop.Input
             _lastState = startState;
         }
 
-        public void Update(float deltaTime, MouseState currentState)
+        public void Update(GameTime time, MouseState currentState)
         {
             DeltaPosition = new Vector2(
                 _lastState.Position.X - currentState.Position.X,

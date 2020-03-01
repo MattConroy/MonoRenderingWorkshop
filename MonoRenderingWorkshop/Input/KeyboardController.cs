@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 
 namespace MonoRenderingWorkshop.Input
 {
@@ -12,7 +13,7 @@ namespace MonoRenderingWorkshop.Input
             _currentState = startState;
         }
 
-        public void Update(float deltaTime, KeyboardState currentState)
+        public void Update(GameTime time, KeyboardState currentState)
         {
             _lastState = _currentState;
             _currentState = currentState;

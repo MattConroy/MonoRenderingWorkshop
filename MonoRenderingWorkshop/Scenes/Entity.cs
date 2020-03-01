@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoRenderingWorkshop.Rendering;
+using MonoRenderingWorkshop.Rendering.Effects;
+using MonoRenderingWorkshop.Rendering.Effects.Parameters;
 
 namespace MonoRenderingWorkshop.Scenes
 {

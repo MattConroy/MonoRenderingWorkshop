@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoRenderingWorkshop.Input;
 using MonoRenderingWorkshop.Rendering;
+using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
+using MonoRenderingWorkshop.Scenes.Lights;
 using DirectionalLight = MonoRenderingWorkshop.Scenes.Lights.DirectionalLight;
 
 namespace MonoRenderingWorkshop
@@ -36,11 +38,11 @@ namespace MonoRenderingWorkshop
         {
             IsFixedTimeStep = false;
 
-            _renderer = new ForwardRenderer(_graphics, 1280, 720);
-            _shaderManager = new ShaderManager(Content, OnShadersReloaded);
-
             _keyboard = new KeyboardController(Keyboard.GetState());
             _mouse = new MouseController(Mouse.GetState(), _graphics.GraphicsDevice);
+
+            _renderer = new ForwardRenderer(_graphics, 1280, 720, _keyboard);
+            _shaderManager = new ShaderManager(Content, OnShadersReloaded);
 
             _camera = new Camera(
                 _graphics.GraphicsDevice,
@@ -51,8 +53,10 @@ namespace MonoRenderingWorkshop
                 Vector3.Forward);
 
             _scene = new Scene(_camera);
-            _scene.Add(new DirectionalLight(new Vector3(1, 1, 1), 0.5f, Color.White));
-            _scene.Add(new DirectionalLight(new Vector3(-1, 1, 1), 0.5f, Color.White));
+            //_scene.Add(new DirectionalLight(new Vector3(-1, -1, -1), Color.White, 0.5f));
+            _scene.Add(new PointLight(new Vector3(0, 5, 8), Color.White, 0.5f, 10f));
+            _scene.Add(new PointLight(new Vector3(0, 8, 0), Color.White, 0.5f, 10f));
+            _scene.Add(new PointLight(new Vector3(0, 5, -8), Color.White, 0.5f, 10f));
 
             base.Initialize();
         }
@@ -61,7 +65,7 @@ namespace MonoRenderingWorkshop
         {
             _ui = new UserInterface(new SpriteBatch(GraphicsDevice), Content);
 
-            _scene.Add(new Entity(Content.Load<Model>("models/sponza/sponza_obj"),
+            _scene.Add(new Entity(Content.Load<Model>("models/sponza/sponza"),
                 Vector3.Zero, Quaternion.Identity, Vector3.One));
             //_scene.Add(new Entity(Content.Load<Model>("models/cube"),
             //    new Vector3(0, -1f, 0), Quaternion.Identity, new Vector3(50, 0.5f, 50)));
@@ -89,12 +93,11 @@ namespace MonoRenderingWorkshop
             if (!IsActive)
                 return;
 
-            var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             var keyboardState = Keyboard.GetState();
             var mouseState = Mouse.GetState();
 
-            _keyboard.Update(deltaTime, keyboardState);
-            _mouse.Update(deltaTime, mouseState);
+            _keyboard.Update(gameTime, keyboardState);
+            _mouse.Update(gameTime, mouseState);
 
             if (_keyboard.IsKeyDown(Keys.Escape))
                 Exit();
@@ -102,11 +105,15 @@ namespace MonoRenderingWorkshop
             if (_keyboard.WasPressed(Keys.F5))
                 _shaderManager.Reload();
 
-            _scene.Update(deltaTime);
+            _renderer.Update(gameTime);
+            _scene.Update(gameTime);
             _ui.Update(gameTime);
 
+            _ui.Debug($"Time: {gameTime.TotalGameTime.TotalSeconds}");
             _ui.Debug($"Camera Position: {_camera.Position}");
-            _ui.Debug($"Mouse Position: {_mouse.Position}");
+            _ui.Debug(!_renderer.MainEffect.AllLightsActive
+                ? $"Active Light is: {_renderer.MainEffect.ActiveLightIndex}"
+                : "All Lights Active");
 
             _mouse.Reset();
 
@@ -115,14 +122,8 @@ namespace MonoRenderingWorkshop
 
         protected override void Draw(GameTime gameTime)
         {
-            var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            GraphicsDevice.Clear(Color.CornflowerBlue);
-            GraphicsDevice.DepthStencilState = DepthStencilState.Default;
-            GraphicsDevice.BlendState = BlendState.Opaque;
-
             _scene.Draw(_renderer);
-            _ui.Draw(deltaTime);
+            _ui.Draw(gameTime);
 
             base.Draw(gameTime);
         }

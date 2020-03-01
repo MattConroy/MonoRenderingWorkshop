@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoRenderingWorkshop.Input;
+using MonoRenderingWorkshop.MonoGame;
 
 namespace MonoRenderingWorkshop.Scenes.Cameras
 {
@@ -39,8 +40,9 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
             _forward = forward;
         }
 
-        public void Update(float deltaTime)
+        public void Update(GameTime time)
         {
+            var deltaTime = time.GetDeltaTime();
             var right = Vector3.Cross(_forward, Vector3.Up);
             _forward = Vector3.TransformNormal(_forward,
                 Matrix.CreateFromAxisAngle(right, _mouse.DeltaPosition.Y * deltaTime * _controls.MouseSensitivity.Y) *

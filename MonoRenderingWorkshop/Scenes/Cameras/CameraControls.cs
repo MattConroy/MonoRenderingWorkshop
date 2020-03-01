@@ -1,20 +1,20 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using KeyboardKeys = Microsoft.Xna.Framework.Input.Keys;
+using Microsoft.Xna.Framework.Input;
 
 namespace MonoRenderingWorkshop.Scenes.Cameras
 {
     public sealed class CameraControls
     {
-        public IDictionary<KeyboardKeys, Vector3> MovementMap { get; }
-        public IEnumerable<KeyboardKeys> SpeedKeys { get; }
+        public IDictionary<Keys, Vector3> MovementMap { get; }
+        public IEnumerable<Keys> SpeedKeys { get; }
         public Vector2 MouseSensitivity { get; }
 
         private readonly float _speedModifier;
         private readonly float _speed;
 
-        public CameraControls(IDictionary<KeyboardKeys, Vector3> movementMap,
-            IEnumerable<KeyboardKeys> speedKeys,
+        public CameraControls(IDictionary<Keys, Vector3> movementMap,
+            IEnumerable<Keys> speedKeys,
             Vector2 mouseSensitivity,
             float speed, float speedModifier)
         {
@@ -30,16 +30,16 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
             _speed * (isModified ? _speedModifier : 1f);
 
         public static CameraControls DefaultControls =>
-            new CameraControls(new Dictionary<KeyboardKeys, Vector3>
+            new CameraControls(new Dictionary<Keys, Vector3>
                 {
-                    [KeyboardKeys.W] = Vector3.Forward,
-                    [KeyboardKeys.S] = Vector3.Backward,
-                    [KeyboardKeys.A] = Vector3.Left,
-                    [KeyboardKeys.D] = Vector3.Right,
-                    [KeyboardKeys.Q] = Vector3.Down,
-                    [KeyboardKeys.E] = Vector3.Up
+                    [Keys.W] = Vector3.Forward,
+                    [Keys.S] = Vector3.Backward,
+                    [Keys.A] = Vector3.Left,
+                    [Keys.D] = Vector3.Right,
+                    [Keys.Q] = Vector3.Down,
+                    [Keys.E] = Vector3.Up
                 },
-                new[] { KeyboardKeys.LeftShift, KeyboardKeys.RightShift },
+                new[] { Keys.LeftShift, Keys.RightShift },
                 new Vector2(0.8f, 0.6f), 8f, 4f);
     }
 }

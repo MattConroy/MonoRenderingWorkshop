@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering.Messages;
 using System;
 using System.Collections.Generic;
@@ -43,21 +44,21 @@ namespace MonoRenderingWorkshop.Rendering
             }
         }
 
-        public void Draw(float deltaTime)
+        public void Draw(GameTime time)
         {
             const float smoothing = 0.99f;
-            var fps = 1.0f / deltaTime;
+            var fps = 1.0f / time.GetDeltaTime();
             _totalFps = _totalFps * smoothing + fps * (1.0f - smoothing);
 
             _spriteBatch.Begin();
-            _spriteBatch.DrawString(_arial, $"FPS: {_totalFps:N1}", Vector2.Zero, Color.Black);
+            _spriteBatch.DrawString(_arial, $"FPS: {_totalFps:N1}", Vector2.Zero, Color.Fuchsia);
 
             var screenPosition = Vector2.Zero;
             screenPosition.Y += Spacing;
 
             foreach (var message in _messages)
             {
-                _spriteBatch.DrawString(_arial, message.ToString(), screenPosition, Color.Black);
+                _spriteBatch.DrawString(_arial, message.ToString(), screenPosition, Color.Fuchsia);
                 screenPosition.Y += Spacing;
             }
 

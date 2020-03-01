@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoRenderingWorkshop.Rendering;
+using MonoRenderingWorkshop.Rendering.Effects.Parameters;
 
 namespace MonoRenderingWorkshop.Scenes.Lights
 {
@@ -14,6 +14,7 @@ namespace MonoRenderingWorkshop.Scenes.Lights
             Colour = colour;
         }
 
+        public abstract void Update(GameTime time);
         public abstract RenderLight GetRenderData();
     }
 }

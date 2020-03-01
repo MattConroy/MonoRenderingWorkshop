@@ -1,8 +1,9 @@
-﻿using MonoRenderingWorkshop.Rendering;
+﻿using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes.Cameras;
+using MonoRenderingWorkshop.Scenes.Lights;
 using System.Collections.Generic;
 using System.Linq;
-using MonoRenderingWorkshop.Scenes.Lights;
+using Microsoft.Xna.Framework;
 
 namespace MonoRenderingWorkshop.Scenes
 {
@@ -31,9 +32,12 @@ namespace MonoRenderingWorkshop.Scenes
                 _lights.Add(light);
         }
 
-        public void Update(float deltaTime)
+        public void Update(GameTime time)
         {
-            _camera.Update(deltaTime);
+            _camera.Update(time);
+
+            foreach (var light in _lights)
+                light.Update(time);
         }
 
         public void Draw(Renderer renderer)
