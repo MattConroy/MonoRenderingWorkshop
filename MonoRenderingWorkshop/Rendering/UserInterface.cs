@@ -5,6 +5,7 @@ using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering.Messages;
 using System;
 using System.Collections.Generic;
+using MonoRenderingWorkshop.Rendering.Renderers;
 
 namespace MonoRenderingWorkshop.Rendering
 {
@@ -44,7 +45,7 @@ namespace MonoRenderingWorkshop.Rendering
             }
         }
 
-        public void Draw(GameTime time)
+        public void Draw(GameTime time, Renderer renderer)
         {
             const float smoothing = 0.99f;
             var fps = 1.0f / time.GetDeltaTime();
@@ -61,6 +62,8 @@ namespace MonoRenderingWorkshop.Rendering
                 _spriteBatch.DrawString(_arial, message.ToString(), screenPosition, Color.Fuchsia);
                 screenPosition.Y += Spacing;
             }
+
+            renderer.DrawDebug(_spriteBatch);
 
             _spriteBatch.End();
         }

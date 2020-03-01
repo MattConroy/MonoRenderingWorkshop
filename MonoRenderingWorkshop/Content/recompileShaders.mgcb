@@ -21,3 +21,9 @@
 /processorParam:DebugMode=Auto
 /build:shaders/forwardRendering.fx
 
+#begin shaders/deferredRendering.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:shaders/deferredRendering.fx
+

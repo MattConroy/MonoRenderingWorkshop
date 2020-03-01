@@ -42,7 +42,10 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="MonoGame\EffectTechniqueExtensions.cs" />
     <Compile Include="MonoGame\GameTimeExtensions.cs" />
+    <Compile Include="Rendering\Components\FullScreenQuad.cs" />
+    <Compile Include="Rendering\Components\Quad.cs" />
     <Compile Include="Rendering\Effects\DeferredRenderingEffect.cs" />
     <Compile Include="Rendering\Effects\Parameters\RenderLight.cs" />
     <Compile Include="Rendering\Renderers\DeferredRenderer.cs" />
@@ -83,6 +86,9 @@
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="..\.editorconfig">
+      <Link>.editorconfig</Link>
+    </None>
     <None Include="app.config" />
     <None Include="app.manifest" />
   </ItemGroup>

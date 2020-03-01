@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Content;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,9 +14,9 @@ namespace MonoRenderingWorkshop
 
         private readonly string _artifactDirectory;
         private readonly string _sourceDirectory;
-        private readonly Action _onShadersReloaded;
+        private readonly Action<GameTime> _onShadersReloaded;
 
-        public ShaderManager(ContentManager mainContentManager, Action onShadersReloaded) :
+        public ShaderManager(ContentManager mainContentManager, Action<GameTime> onShadersReloaded) :
             base(mainContentManager?.ServiceProvider,
                 mainContentManager?.RootDirectory)
         {
@@ -24,12 +25,12 @@ namespace MonoRenderingWorkshop
             _onShadersReloaded = onShadersReloaded;
         }
 
-        public void Reload()
+        public void Reload(GameTime time)
         {
             if (RecompileShaders())
             {
                 Unload();
-                _onShadersReloaded();
+                _onShadersReloaded(time);
             }
         }
 

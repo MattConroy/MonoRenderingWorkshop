@@ -7,7 +7,7 @@ using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using MonoRenderingWorkshop.Scenes.Lights;
-using DirectionalLight = MonoRenderingWorkshop.Scenes.Lights.DirectionalLight;
+using System;
 
 namespace MonoRenderingWorkshop
 {
@@ -31,6 +31,7 @@ namespace MonoRenderingWorkshop
         public RenderingWorkshop()
         {
             _graphics = new GraphicsDeviceManager(this);
+            _graphics.GraphicsProfile = GraphicsProfile.HiDef;
             Content.RootDirectory = "Content";
         }
 
@@ -42,6 +43,7 @@ namespace MonoRenderingWorkshop
             _mouse = new MouseController(Mouse.GetState(), _graphics.GraphicsDevice);
 
             _renderer = new ForwardRenderer(_graphics, 1280, 720, _keyboard);
+            //_renderer = new DeferredRenderer(_graphics, 1280, 720, _keyboard);
             _shaderManager = new ShaderManager(Content, OnShadersReloaded);
 
             _camera = new Camera(
@@ -70,12 +72,14 @@ namespace MonoRenderingWorkshop
             //_scene.Add(new Entity(Content.Load<Model>("models/cube"),
             //    new Vector3(0, -1f, 0), Quaternion.Identity, new Vector3(50, 0.5f, 50)));
 
-            _shaderManager.Reload();
+            _shaderManager.Reload(new GameTime());
         }
 
-        private void OnShadersReloaded()
+        private void OnShadersReloaded(GameTime time)
         {
             _renderer.SetMainEffect(_shaderManager.Load<Effect>("shaders/forwardRendering"));
+            //_renderer.SetMainEffect(_shaderManager.Load<Effect>("shaders/deferredRendering"));
+            _ui.Debug("Shaders loaded successfully!", time.TotalGameTime + TimeSpan.FromSeconds(3));
         }
 
         protected override void UnloadContent()
@@ -84,7 +88,7 @@ namespace MonoRenderingWorkshop
             _shaderManager.Unload();
         }
 
-        protected override void Update(GameTime gameTime)
+        protected override void Update(GameTime time)
         {
             if (_wasActive != IsActive)
                 OnFocusChanged(IsActive);
@@ -96,36 +100,35 @@ namespace MonoRenderingWorkshop
             var keyboardState = Keyboard.GetState();
             var mouseState = Mouse.GetState();
 
-            _keyboard.Update(gameTime, keyboardState);
-            _mouse.Update(gameTime, mouseState);
+            _keyboard.Update(time, keyboardState);
+            _mouse.Update(time, mouseState);
 
             if (_keyboard.IsKeyDown(Keys.Escape))
                 Exit();
 
             if (_keyboard.WasPressed(Keys.F5))
-                _shaderManager.Reload();
+                _shaderManager.Reload(time);
 
-            _renderer.Update(gameTime);
-            _scene.Update(gameTime);
-            _ui.Update(gameTime);
+            _renderer.Update(time);
+            _scene.Update(time);
+            _ui.Update(time);
 
-            _ui.Debug($"Time: {gameTime.TotalGameTime.TotalSeconds}");
-            _ui.Debug($"Camera Position: {_camera.Position}");
+            _ui.Debug($"Time: {time.TotalGameTime.TotalSeconds:N2}");
             _ui.Debug(!_renderer.MainEffect.AllLightsActive
                 ? $"Active Light is: {_renderer.MainEffect.ActiveLightIndex}"
                 : "All Lights Active");
 
             _mouse.Reset();
 
-            base.Update(gameTime);
+            base.Update(time);
         }
 
-        protected override void Draw(GameTime gameTime)
+        protected override void Draw(GameTime time)
         {
             _scene.Draw(_renderer);
-            _ui.Draw(gameTime);
+            _ui.Draw(time, _renderer);
 
-            base.Draw(gameTime);
+            base.Draw(time);
         }
 
         private void OnFocusChanged(bool isActive)

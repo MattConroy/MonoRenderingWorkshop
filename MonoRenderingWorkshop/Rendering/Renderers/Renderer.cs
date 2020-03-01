@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoRenderingWorkshop.Input;
 using MonoRenderingWorkshop.Rendering.Effects;
+using MonoRenderingWorkshop.Rendering.Effects.Parameters;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using System.Collections.Generic;
-using MonoRenderingWorkshop.Rendering.Effects.Parameters;
 
 namespace MonoRenderingWorkshop.Rendering.Renderers
 {
@@ -44,6 +44,8 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
         }
 
         public abstract void Draw(Camera camera, IEnumerable<RenderEntity> entities, IEnumerable<RenderLight> lights);
+
+        public abstract void DrawDebug(SpriteBatch spriteBatch);
 
         protected abstract RenderEffect CreateRenderEffect(Effect mainEffect);
 

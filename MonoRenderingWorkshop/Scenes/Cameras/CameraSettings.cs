@@ -23,6 +23,6 @@ namespace MonoRenderingWorkshop.Scenes.Cameras
             new CameraSettings(
                 MathHelper.ToRadians(50),
                 0.1f,
-                100f);
+                50f);
     }
 }

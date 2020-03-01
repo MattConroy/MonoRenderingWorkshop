@@ -6,6 +6,7 @@
 	#define VS_SHADERMODEL vs_4_0_level_9_1
 	#define PS_SHADERMODEL ps_4_0_level_9_1
 #endif
+#include "common.fx"
 
 matrix World;
 matrix View;
@@ -17,26 +18,25 @@ float4 LightDirection[MAX_LIGHT_COUNT];
 float3 LightPosition[MAX_LIGHT_COUNT];
 float3 LightColour[MAX_LIGHT_COUNT];
 
-float4 AmbientColor = float4(1, 1, 1, 1);
-float AmbientIntensity = 0.0;
-
-struct VertexShaderInput
+struct VertexInput
 {
 	float4 Position : POSITION0;
 	float4 Normal : NORMAL0;
 };
-
-struct VertexShaderOutput
+struct VertexOutput
 {
 	float4 Position : SV_POSITION;
-	float3 WorldPos : TEXCOORD0;
 	float4 Normal : NORMAL0;
-	float4 Colour : COLOR0;
+	float3 WorldPos : TEXCOORD0;
+};
+struct PixelOutput
+{
+	float4 Colour : COLOR;
 };
 
-VertexShaderOutput VertexMain(in VertexShaderInput input)
+VertexOutput VertexMain(in VertexInput input)
 {
-	VertexShaderOutput output = (VertexShaderOutput)0;
+	VertexOutput output;
     float4 worldPosition = mul(input.Position, World);
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
@@ -44,28 +44,20 @@ VertexShaderOutput VertexMain(in VertexShaderInput input)
 	output.WorldPos = worldPosition.xyz;
 	return output;
 }
-
-float4 PixelMain(VertexShaderOutput input) : COLOR
+PixelOutput PixelMain(VertexOutput input) 
 {
+	PixelOutput output;
 	float3 lightColour = float3(0,0,0);
 	[unroll(MAX_LIGHT_COUNT)]
 	for(int i = 0 ; i < MAX_LIGHT_COUNT ; i++)
 	{
-		float3 directionToLight = input.WorldPos - LightPosition[i];
-		float distance = length(directionToLight);
-		directionToLight = normalize(directionToLight);
-
-		float3 lightDirection = lerp(directionToLight, LightDirection[i].xyz, LightDirection[i].w);
-		float directionalIntensity = dot(input.Normal.xyz, -lightDirection);
-
-		float3 diffuse = LightColour[i] * directionalIntensity;
-		float attenuation = LightAttenuation[i].x +
-							LightAttenuation[i].y * distance +
-							LightAttenuation[i].z * distance * distance;
-		lightColour += saturate(diffuse / attenuation);
+		lightColour += ComputeLightContribution(input.WorldPos, input.Normal.xyz,
+			LightPosition[i], LightDirection[i], LightAttenuation[i], LightColour[i]);
 	}
-	return float4(lightColour.rgb, 1) + AmbientColor * AmbientIntensity;
+	output.Colour = float4(lightColour.rgb, 1);
+	return output;
 }
+
 
 technique Forward
 {

@@ -6,64 +6,48 @@ namespace MonoRenderingWorkshop.Rendering.Effects
 {
     internal sealed class DeferredRenderingEffect : RenderEffect
     {
-        private const int MaxLights = 4;
-
-        public RenderLight[] Lights
+        public Texture PositionMap { get; set; }
+        public Texture NormalMap { get; set; }
+        public RenderLight CurrentLight
         {
-            set => AssignLightValues(value);
+            set => AssignLightValue(value);
         }
 
-        private readonly Vector3[] _attenuation;
-        private readonly Vector4[] _directions;
-        private readonly Vector3[] _positions;
-        private readonly Vector3[] _colours;
+        private Vector3 _attenuation;
+        private Vector4 _direction;
+        private Vector3 _position;
+        private Vector3 _colour;
 
         public DeferredRenderingEffect(Effect effect) : base(effect)
         {
-            _attenuation = new Vector3[MaxLights];
-            _directions = new Vector4[MaxLights];
-            _positions = new Vector3[MaxLights];
-            _colours = new Vector3[MaxLights];
+            _attenuation = Vector3.Zero;
+            _direction = Vector4.Zero;
+            _position = Vector3.Zero;
+            _colour = Vector3.Zero;
         }
 
         protected override void OnApply()
         {
             base.OnApply();
 
+            Parameters["InverseViewProjection"].SetValue(Matrix.Invert(View * Projection));
+
             Parameters[$"Light{nameof(RenderLight.Attenuation)}"].SetValue(_attenuation);
-            Parameters[$"Light{nameof(RenderLight.Direction)}"].SetValue(_directions);
-            Parameters[$"Light{nameof(RenderLight.Position)}"].SetValue(_positions);
-            Parameters[$"Light{nameof(RenderLight.Colour)}"].SetValue(_colours);
+            Parameters[$"Light{nameof(RenderLight.Direction)}"].SetValue(_direction);
+            Parameters[$"Light{nameof(RenderLight.Position)}"].SetValue(_position);
+            Parameters[$"Light{nameof(RenderLight.Colour)}"].SetValue(_colour);
+
+            Parameters[nameof(PositionMap)].SetValue(PositionMap);
+            Parameters[nameof(NormalMap)].SetValue(NormalMap);
         }
 
-        private void AssignLightValues(RenderLight[] lights)
+
+        private void AssignLightValue(RenderLight light)
         {
-            for (int i = 0; i < MaxLights; ++i)
-            {
-                if (i < lights.Length && (AllLightsActive || ActiveLightIndex == i))
-                {
-                    _attenuation[i] = new Vector3(
-                        lights[i].Attenuation.ConstantFactor,
-                        lights[i].Attenuation.LinearFactor,
-                        lights[i].Attenuation.ExponentialFactor);
-
-                    _directions[i] = new Vector4(
-                        lights[i].Direction,
-                        lights[i].DirectionFactor);
-
-                    _positions[i] = lights[i].Position;
-
-                    _colours[i] = lights[i].Intensity *
-                                  lights[i].Colour.ToVector3();
-                }
-                else
-                {
-                    _attenuation[i] = Vector3.Zero;
-                    _directions[i] = Vector4.Zero;
-                    _positions[i] = Vector3.Zero;
-                    _colours[i] = Vector3.Zero;
-                }
-            }
+            _attenuation = light.GetAttenuation();
+            _direction = light.GetDirection();
+            _position = light.Position;
+            _colour = light.GetColour();
         }
     }
 }

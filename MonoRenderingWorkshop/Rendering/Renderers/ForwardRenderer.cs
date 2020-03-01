@@ -16,13 +16,13 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 
         public ForwardRenderer(GraphicsDeviceManager graphics, int width, int height, KeyboardController keyboard) : base(graphics, width, height, keyboard)
         {
-            graphics.PreferMultiSampling = true;
+            DeviceManager.PreferMultiSampling = true;
         }
 
         public override void Draw(Camera camera, IEnumerable<RenderEntity> entities, IEnumerable<RenderLight> lights)
         {
-            if (MainEffect == null)
-                throw new InvalidOperationException($"{nameof(MainEffect)} cannot be null.");
+            if (_forwardRenderingEffect == null)
+                throw new InvalidOperationException($"{nameof(_forwardRenderingEffect)} cannot be null.");
 
             DeviceManager.GraphicsDevice.DepthStencilState = DepthStencilState.Default;
             DeviceManager.GraphicsDevice.BlendState = BlendState.Opaque;
@@ -47,6 +47,8 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
                 }
             }
         }
+
+        public override void DrawDebug(SpriteBatch spriteBatch) { }
 
         protected override RenderEffect CreateRenderEffect(Effect mainEffect)
         {
