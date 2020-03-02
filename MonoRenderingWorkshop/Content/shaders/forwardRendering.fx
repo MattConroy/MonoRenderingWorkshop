@@ -45,8 +45,11 @@ PixelOutput AmbientPixelMain(VertexOutput input)
 PixelOutput DiffusePixelMain(VertexOutput input) 
 {
 	PixelOutput output;
-	output.Colour = float4(ComputeLightContribution(input.WorldPos, normalize(input.Normal.xyz),
-		LightPosition, LightDirection, LightAttenuation, LightDiffuseColour, LightAmbientColour), 1.0);
+	float directionalIntensity = dot(normalize(input.Normal.xyz), -LightDirection.xyz);
+
+	float3 diffuse = LightDiffuseColour * directionalIntensity;
+	float3 colour = saturate(diffuse + LightAmbientColour);
+	output.Colour = float4(colour, 1.0);
 	return output;
 }
 
