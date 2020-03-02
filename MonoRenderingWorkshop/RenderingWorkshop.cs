@@ -29,9 +29,6 @@ namespace MonoRenderingWorkshop
 
         private bool _wasActive = true;
 
-        private readonly PointLightFactory _lightFactory;
-        private readonly IList<Light> _lights;
-
         public RenderingWorkshop()
         {
             _graphics = new GraphicsDeviceManager(this)
@@ -39,9 +36,6 @@ namespace MonoRenderingWorkshop
                 GraphicsProfile = GraphicsProfile.HiDef
             };
             Content.RootDirectory = "Content";
-
-            _lightFactory = new PointLightFactory();
-            _lights = new List<Light>();
         }
 
         protected override void Initialize()
