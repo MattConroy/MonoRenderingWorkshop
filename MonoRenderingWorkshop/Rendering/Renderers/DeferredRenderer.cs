@@ -26,7 +26,7 @@ namespace MonoRenderingWorkshop.Rendering.Renderers
 
         public DeferredRenderer(GraphicsDeviceManager graphics, int width, int height, KeyboardController keyboard) : base(graphics, width, height, keyboard)
         {
-            _positionBuffer = new RenderTexture(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Single, DepthFormat.Depth24Stencil8);
+            _positionBuffer = new RenderTexture(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.Depth24Stencil8);
             _normalBuffer = new RenderTexture(DeviceManager.GraphicsDevice, width, height, false, SurfaceFormat.Color, DepthFormat.None);
 
             _fullScreenQuad = new FullScreenQuad(DeviceManager.GraphicsDevice);

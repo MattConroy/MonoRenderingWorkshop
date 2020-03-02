@@ -8,7 +8,6 @@ using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using MonoRenderingWorkshop.Scenes.Lights;
-using System.Collections.Generic;
 
 namespace MonoRenderingWorkshop
 {
@@ -30,7 +29,6 @@ namespace MonoRenderingWorkshop
         private bool _wasActive = true;
 
         private readonly PointLightFactory _lightFactory;
-        private readonly IList<Light> _lights;
 
         public RenderingWorkshop()
         {
@@ -41,7 +39,6 @@ namespace MonoRenderingWorkshop
             Content.RootDirectory = "Content";
 
             _lightFactory = new PointLightFactory();
-            _lights = new List<Light>();
         }
 
         protected override void Initialize()
@@ -66,15 +63,18 @@ namespace MonoRenderingWorkshop
 
             _scene = new Scene(_camera);
 
+            const float radius = 4;
+            const int pointLightCount = 7;
+            var centre = Vector2.Zero;
             var ambientLight = new LightColour(Color.Yellow, 0.005f);
-            for (var i = 0; i < 14; ++i)
+            for (var i = 0; i < pointLightCount; ++i)
             {
+                var angle = CircleHelper.GetAngleFromNumberOfPoints(i, pointLightCount);
+                var (x, z) = CircleHelper.GetPointOnCircle(centre, radius, angle);
                 var light = _lightFactory.CreatePointLight(ambientLight, 0.3f, 10);
-                light.Position = new Vector3(0, 4, 0);
-                _lights.Add(light);
+                light.Position = new Vector3(x, 1f, z);
                 _scene.Add(light);
             }
-
             base.Initialize();
         }
 
@@ -120,13 +120,6 @@ namespace MonoRenderingWorkshop
 
             if (_keyboard.WasPressed(Keys.Space))
                 OnSwitchRenderer(time);
-
-            for (var i = 0; i < _lights.Count; ++i)
-            {
-                var angle = CircleHelper.GetAngleFromNumberOfPoints(i, _lights.Count) - (float)time.TotalGameTime.TotalSeconds;
-                var (x, z) = CircleHelper.GetPointOnCircle(Vector2.Zero, 7, angle);
-                _lights[i].Position = new Vector3(x, _lights[i].Position.Y, z);
-            }
 
             _shaderManager.Update(time);
             _renderer.Update(time);

@@ -45,7 +45,7 @@ struct GeometryVertexOutput
 {
 	float4 Position : SV_POSITION;
 	float4 Normal : NORMAL0;
-	float2 Depth : TEXCOORD0;
+	float3 WorldPos : TEXCOORD0;
 };
 struct GeometryPixelOutput
 {
@@ -60,14 +60,14 @@ GeometryVertexOutput GeometryVertexMain(in GeometryVertexInput input)
     float4 viewPosition = mul(worldPosition, View);
     output.Position = mul(viewPosition, Projection);
 	output.Normal = mul(input.Normal, World);
-	output.Depth = output.Position.zw;
+	output.WorldPos = worldPosition.xyz;
 	return output;
 }
 GeometryPixelOutput GeometryPixelMain(GeometryVertexOutput input) 
 {
 	GeometryPixelOutput output;
-	output.Position = input.Depth.x / input.Depth.y;
-	output.Normal = 0.5 * normalize(input.Normal) + 0.5;
+	output.Position = float4(1.0, 1.0, 1.0, 1.0);
+    output.Normal = float4(0.5, 0.5, 0.5, 0.5);
 	return output;
 }
 
@@ -97,19 +97,13 @@ LightingPixelOutput LightingPixelMain(LightingVertexOutput input)
 {
     LightingPixelOutput output;
 
-	float encodedDepth = SAMPLE_TEXTURE(PositionBuffer, input.TexCoord).r;
-	float2 screenPos = float2(
-		input.TexCoord.x * 2.0 - 1.0,
-		-(input.TexCoord.y * 2.0 - 1.0));
-	float4 position = float4(screenPos.xy, encodedDepth, 1.0);
-	position = mul(position, InverseViewProjection);
-	position /= position.w;
-
-    float4 encodedNormal = SAMPLE_TEXTURE(NormalBuffer, input.TexCoord);
-    float3 normal = normalize(2 * encodedNormal.xyz - 1.0);
+	float4 position = float4(0.0, 0.0, 0.0, 1.0);
+	float4 normal = float4(0.0, 1.0, 0.0, 0.0);
 
 	output.Colour = float4(ComputeLightContribution(position.xyz, normal.xyz, LightPosition,
 		LightDirection, LightAttenuation, LightDiffuseColour, LightAmbientColour), 1.0);
+
+	output.Colour = float4(0.0, 0.0, 0.0, 1.0);
 		
 	return output;
 }

@@ -8,7 +8,8 @@ namespace MonoRenderingWorkshop.Rendering.Components
         private readonly Texture2D _texture;
         private readonly Color[] _data;
 
-        public RenderTexture(GraphicsDevice graphicsDevice, int width, int height, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat) : base(graphicsDevice, width, height, mipMap, preferredFormat, preferredDepthFormat)
+        public RenderTexture(GraphicsDevice graphicsDevice, int width, int height, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat) 
+            : base(graphicsDevice, width, height, mipMap, preferredFormat, preferredDepthFormat)
         {
             _texture = new Texture2D(graphicsDevice, Width, Height, mipMap, Format);
             _data = new Color[width * height];
