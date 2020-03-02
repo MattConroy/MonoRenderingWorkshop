@@ -29,9 +29,6 @@ namespace MonoRenderingWorkshop
 
         private bool _wasActive = true;
 
-        private readonly PointLightFactory _lightFactory;
-        private readonly IList<Light> _lights;
-
         public RenderingWorkshop()
         {
             _graphics = new GraphicsDeviceManager(this)
@@ -39,9 +36,6 @@ namespace MonoRenderingWorkshop
                 GraphicsProfile = GraphicsProfile.HiDef
             };
             Content.RootDirectory = "Content";
-
-            _lightFactory = new PointLightFactory();
-            _lights = new List<Light>();
         }
 
         protected override void Initialize()
@@ -113,16 +107,6 @@ namespace MonoRenderingWorkshop
             if (_keyboard.IsKeyDown(Keys.Escape) && !_keyboard.IsKeyDown(Keys.LeftAlt))
                 Exit();
 
-            if (_keyboard.WasPressed(Keys.Space))
-                OnSwitchRenderer(time);
-
-            for (var i = 0; i < _lights.Count; ++i)
-            {
-                var angle = CircleHelper.GetAngleFromNumberOfPoints(i, _lights.Count) - (float)time.TotalGameTime.TotalSeconds;
-                var (x, z) = CircleHelper.GetPointOnCircle(Vector2.Zero, 7, angle);
-                _lights[i].Position = new Vector3(x, _lights[i].Position.Y, z);
-            }
-
             _shaderManager.Update(time);
             _renderer.Update(time);
             _scene.Update(time);
@@ -151,21 +135,6 @@ namespace MonoRenderingWorkshop
         {
             _mouse.Reset();
         }
-
-        private void OnSwitchRenderer(GameTime time)
-        {
-            _renderer?.Dispose();
-            _renderer = _renderer is ForwardRenderer
-                ? CreateDeferredRenderer()
-                : CreateForwardRenderer();
-
-            _ui.Debug($"Renderer changed to {_renderer.GetType().Name}", time);
-
-            OnShadersReloaded(time);
-        }
-
-        private Renderer CreateDeferredRenderer() =>
-            new DeferredRenderer(_graphics, 1280, 720, _keyboard);
 
         private Renderer CreateForwardRenderer() =>
             new ForwardRenderer(_graphics, 1280, 720, _keyboard);
