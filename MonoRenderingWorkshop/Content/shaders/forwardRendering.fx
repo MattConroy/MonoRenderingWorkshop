@@ -36,13 +36,7 @@ VertexOutput VertexMain(in VertexInput input)
 	output.WorldPos = worldPosition.xyz;
 	return output;
 }
-PixelOutput AmbientPixelMain(VertexOutput input) 
-{
-	PixelOutput output;
-	output.Colour = float4(0.0, 0.0, 0.0, 1.0);
-	return output;
-}
-PixelOutput DiffusePixelMain(VertexOutput input) 
+PixelOutput PixelMain(VertexOutput input) 
 {
 	PixelOutput output;
 	output.Colour = float4(ComputeLightContribution(input.WorldPos, normalize(input.Normal.xyz),
@@ -50,5 +44,4 @@ PixelOutput DiffusePixelMain(VertexOutput input)
 	return output;
 }
 
-TECHNIQUE(DepthPrePass, VertexMain, AmbientPixelMain)
-TECHNIQUE(LightingPass, VertexMain, DiffusePixelMain)
+TECHNIQUE(Forward, VertexMain, PixelMain)
