@@ -2,13 +2,13 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoRenderingWorkshop.Input;
-using MonoRenderingWorkshop.MonoGame;
 using MonoRenderingWorkshop.Rendering;
 using MonoRenderingWorkshop.Rendering.Renderers;
 using MonoRenderingWorkshop.Scenes;
 using MonoRenderingWorkshop.Scenes.Cameras;
 using MonoRenderingWorkshop.Scenes.Lights;
 using System.Collections.Generic;
+using DirectionalLight = MonoRenderingWorkshop.Scenes.Lights.DirectionalLight;
 
 namespace MonoRenderingWorkshop
 {
@@ -51,7 +51,7 @@ namespace MonoRenderingWorkshop
             _keyboard = new KeyboardController(Keyboard.GetState());
             _mouse = new MouseController(Mouse.GetState(), _graphics.GraphicsDevice);
 
-            _renderer = CreateForwardRenderer();
+            _renderer = new ForwardRenderer(_graphics, 1280, 720, _keyboard);
 
             _shaderManager = new ShaderManager(Content, _keyboard);
             _shaderManager.ShadersReloaded += OnShadersReloaded;
@@ -66,14 +66,8 @@ namespace MonoRenderingWorkshop
 
             _scene = new Scene(_camera);
 
-            var ambientLight = new LightColour(Color.Yellow, 0.005f);
-            for (var i = 0; i < 14; ++i)
-            {
-                var light = _lightFactory.CreatePointLight(ambientLight, 0.3f, 10);
-                light.Position = new Vector3(0, 4, 0);
-                _lights.Add(light);
-                _scene.Add(light);
-            }
+            _scene.Add(new DirectionalLight(new LightColour(Color.Yellow, 0.01f), new LightColour(Color.Red, 0.4f), new Vector3(-1, -1, -1)));
+            _scene.Add(new DirectionalLight(new LightColour(Color.Yellow, 0.01f), new LightColour(Color.Green, 0.4f), new Vector3(1, -1, -1)));
 
             base.Initialize();
         }
@@ -90,7 +84,7 @@ namespace MonoRenderingWorkshop
 
         private void OnShadersReloaded(GameTime time)
         {
-            _renderer.SetMainEffect(_shaderManager.Load<Effect>($"shaders/{_renderer.MainEffectName}"));
+            _renderer.SetMainEffect(_shaderManager.Load<Effect>("shaders/forwardRendering"));
             _ui.Debug("Shaders loaded successfully!", time);
         }
 
@@ -117,16 +111,6 @@ namespace MonoRenderingWorkshop
 
             if (_keyboard.IsKeyDown(Keys.Escape) && !_keyboard.IsKeyDown(Keys.LeftAlt))
                 Exit();
-
-            if (_keyboard.WasPressed(Keys.Space))
-                OnSwitchRenderer(time);
-
-            for (var i = 0; i < _lights.Count; ++i)
-            {
-                var angle = CircleHelper.GetAngleFromNumberOfPoints(i, _lights.Count) - (float)time.TotalGameTime.TotalSeconds;
-                var (x, z) = CircleHelper.GetPointOnCircle(Vector2.Zero, 7, angle);
-                _lights[i].Position = new Vector3(x, _lights[i].Position.Y, z);
-            }
 
             _shaderManager.Update(time);
             _renderer.Update(time);
@@ -156,23 +140,5 @@ namespace MonoRenderingWorkshop
         {
             _mouse.Reset();
         }
-
-        private void OnSwitchRenderer(GameTime time)
-        {
-            _renderer?.Dispose();
-            _renderer = _renderer is ForwardRenderer
-                ? CreateDeferredRenderer()
-                : CreateForwardRenderer();
-
-            _ui.Debug($"Renderer changed to {_renderer.GetType().Name}", time);
-
-            OnShadersReloaded(time);
-        }
-
-        private Renderer CreateDeferredRenderer() =>
-            new DeferredRenderer(_graphics, 1280, 720, _keyboard);
-
-        private Renderer CreateForwardRenderer() =>
-            new ForwardRenderer(_graphics, 1280, 720, _keyboard);
     }
 }

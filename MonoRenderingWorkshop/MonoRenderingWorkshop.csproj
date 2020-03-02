@@ -48,9 +48,7 @@
     <Compile Include="Scenes\Lights\PointLightFactory.cs" />
     <Compile Include="Rendering\Components\FullScreenQuad.cs" />
     <Compile Include="Rendering\Components\Quad.cs" />
-    <Compile Include="Rendering\Effects\DeferredRenderingEffect.cs" />
     <Compile Include="Rendering\Effects\Parameters\RenderLight.cs" />
-    <Compile Include="Rendering\Renderers\DeferredRenderer.cs" />
     <Compile Include="Rendering\Components\RenderTexture.cs" />
     <Compile Include="Scenes\Cameras\Camera.cs" />
     <Compile Include="Scenes\Cameras\CameraSettings.cs" />
