@@ -66,14 +66,9 @@ namespace MonoRenderingWorkshop
 
             _scene = new Scene(_camera);
 
-            var ambientLight = new LightColour(Color.Yellow, 0.005f);
-            for (var i = 0; i < 14; ++i)
-            {
-                var light = _lightFactory.CreatePointLight(ambientLight, 0.3f, 10);
-                light.Position = new Vector3(0, 4, 0);
-                _lights.Add(light);
-                _scene.Add(light);
-            }
+            _scene.Add(new PointLight(new LightColour(Color.Yellow, 0.01f), new LightColour(Color.Red, 2f), new Vector3(0, 5, 8), 10f));
+            _scene.Add(new PointLight(new LightColour(Color.Yellow, 0.01f), new LightColour(Color.Green, 2f), new Vector3(0, 8, 0), 10f));
+            _scene.Add(new PointLight(new LightColour(Color.Yellow, 0.01f), new LightColour(Color.Blue, 2f), new Vector3(0, 5, -8), 10f));
 
             base.Initialize();
         }
@@ -147,7 +142,7 @@ namespace MonoRenderingWorkshop
         protected override void Draw(GameTime time)
         {
             _scene.Draw(_renderer);
-            _ui.Draw(time, _renderer);
+            //_ui.Draw(time, _renderer);
 
             base.Draw(time);
         }
